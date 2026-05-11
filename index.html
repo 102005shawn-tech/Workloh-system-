@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>工讀時數紀錄系統</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+    <div class="container">
+        <h1>SBI 時數紀錄</h1>
+        <div class="input-card">
+            <input type="date" id="workDate">
+            <div class="time-row">
+                <input type="time" id="startTime"> 至 <input type="time" id="endTime">
+            </div>
+            <button onclick="saveLog()">儲存紀錄</button>
+        </div>
+        <div class="summary">本月總計：<span id="totalDisplay">0 小時 0 分</span></div>
+        <div id="logList"></div>
+    </div>
+    <script src="app.js"></script>
+</body>
+</html>

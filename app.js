@@ -1,6 +1,6 @@
 // 1. 初始化 Supabase 連線 (請確保這兩組資訊正確)
 const SUPABASE_URL = 'https://yicwnztovhmbbomfroma.supabase.co';
-const SUPABASE_KEY = '你的_anon_public_key'; // 👈 記得換成你那串 eyJ... 開頭的長字串
+const SUPABASE_KEY = 'sb_publishable_JrUdwQ0Iqs2NzxyMZmB-zw_kQrJhzeU'; // 👈 記得換成你那串 eyJ... 開頭的長字串
 
 const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 

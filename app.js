@@ -3,31 +3,29 @@ const SUPABASE_URL = 'https://yicwnztovhmbbomfroma.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_JrUdwQ0Iqs2NzxyMZmB-zw_kQrJhzeU'; 
 const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-// 2. Google 登入功能
+// 2. Google 登入/登出功能
 async function login() {
     const { error } = await _supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-            // 直接寫死你的完整專案網址，徹底解決 404 問題
+            // 綁定完整專案網址，防止 404 錯誤
             redirectTo: 'https://102005shawn-tech.github.io/Workloh-system-/'
         }
     });
     if (error) alert('登入失敗：' + error.message);
 }
 
-// 登出功能
 async function logout() {
     await _supabase.auth.signOut();
     location.reload();
 }
 
-// 3. 儲存紀錄功能 (包含自動抓取 HTML 鑰匙狀態與帳號隔離保護)
+// 3. 儲存紀錄功能
 async function saveLog() {
     const date = document.getElementById('workDate').value;
     const start = document.getElementById('startTime').value;
     const end = document.getElementById('endTime').value;
-    // 讀取 index.html 裡面選單選取的值，並轉換為布林值 (true / false)
-    const keyStatus = document.getElementById('keyStatus').value === 'true';
+    const keyStatus = document.getElementById('keyStatus').value === 'true'; // 讀取 HTML 的鑰匙狀態
 
     if (!date || !start || !end) return alert('請填寫完整！');
 
@@ -39,19 +37,19 @@ async function saveLog() {
             work_date: date, 
             start_time: start, 
             end_time: end, 
-            user_id: user.id,
-            is_returned: keyStatus // 寫入使用者在下拉選單選取的鑰匙狀態
+            user_id: user.id, // 自動與登入的 Google 帳號綁定
+            is_returned: keyStatus 
         }
     ]);
 
     if (error) alert('儲存失敗：' + error.message);
     else {
         alert('儲存成功！');
-        fetchLogs(); // 重新整理列表
+        fetchLogs(); 
     }
 }
 
-// 4. 抓取紀錄 (包含帳號自動過濾與「鑰匙狀態」開關顯示)
+// 4. 抓取紀錄並呈現在清單中 (含鑰匙歸還狀態顯示)
 async function fetchLogs() {
     const { data, error } = await _supabase
         .from('work_logs')
@@ -62,7 +60,7 @@ async function fetchLogs() {
 
     const list = document.getElementById('logList');
     list.innerHTML = data.map(log => {
-        // 根據資料庫狀態，決定清單按鈕要顯示「未還 ❌」還是「已還 🔑」
+        // 歷史紀錄區：自動判斷鑰匙狀態顯示對應文字與顏色
         const keyStatusText = log.is_returned ? '已還 🔑' : '未還 ❌';
         const keyStatusColor = log.is_returned ? '#48bb78' : '#e53e3e';
 
@@ -83,22 +81,40 @@ async function fetchLogs() {
     }).join('');
 }
 
-// 5. 線上直接切換鑰匙狀態功能
+// 5. 點擊紀錄按紐直接切換鑰匙狀態
 async function toggleKeyStatus(id, currentStatus) {
     const { error } = await _supabase
         .from('work_logs')
-        .update({ is_returned: !currentStatus }) // 狀態反轉：true 變 false，false 變 true
+        .update({ is_returned: !currentStatus }) // 反轉狀態
         .eq('id', id);
 
     if (error) alert('更新鑰匙狀態失敗：' + error.message);
-    else fetchLogs(); // 重新整理列表
+    else fetchLogs(); 
 }
 
-// 6. 刪除紀錄功能
+// 6. 刪除紀錄
 async function deleteLog(id) {
     if (!confirm('確定刪除這筆紀錄嗎？')) return;
     await _supabase.from('work_logs').delete().eq('id', id);
     fetchLogs();
 }
 
-// 7. 監聽
+// 7. 監聽登入狀態切換 UI
+_supabase.auth.onAuthStateChange((event, session) => {
+    const authSection = document.getElementById('authSection');
+    const userProfile = document.getElementById('userProfile');
+    const mainApp = document.getElementById('mainApp');
+    const userEmail = document.getElementById('userEmail');
+
+    if (session) {
+        if (authSection) authSection.style.display = 'none';
+        if (userProfile) userProfile.style.display = 'block';
+        if (mainApp) mainApp.style.display = 'block';
+        if (userEmail) userEmail.innerText = session.user.email;
+        fetchLogs();
+    } else {
+        if (authSection) authSection.style.display = 'block';
+        if (userProfile) userProfile.style.display = 'none';
+        if (mainApp) mainApp.style.display = 'none';
+    }
+});

@@ -99,22 +99,33 @@ async function deleteLog(id) {
     fetchLogs();
 }
 
-// 7. 監聽登入狀態切換 UI
-_supabase.auth.onAuthStateChange((event, session) => {
+// 7. 監聽登入狀態切換 UI (升級版：主動檢查 session)
+async function checkUserSession() {
     const authSection = document.getElementById('authSection');
     const userProfile = document.getElementById('userProfile');
     const mainApp = document.getElementById('mainApp');
     const userEmail = document.getElementById('userEmail');
+
+    // 主動向 Supabase 獲取當前登入的 session
+    const { data: { session } } = await _supabase.auth.getSession();
 
     if (session) {
         if (authSection) authSection.style.display = 'none';
         if (userProfile) userProfile.style.display = 'block';
         if (mainApp) mainApp.style.display = 'block';
         if (userEmail) userEmail.innerText = session.user.email;
-        fetchLogs();
+        fetchLogs(); 
     } else {
         if (authSection) authSection.style.display = 'block';
         if (userProfile) userProfile.style.display = 'none';
         if (mainApp) mainApp.style.display = 'none';
     }
+}
+
+// 網頁一打開，立刻執行檢查
+checkUserSession();
+
+// 當登入狀態改變時（例如點擊登入成功回來），再次觸發檢查
+_supabase.auth.onAuthStateChange((event, session) => {
+    checkUserSession();
 });
